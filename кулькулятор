@@ -1,0 +1,115 @@
+import java.util.Scanner;
+import java.util.HashMap;
+import java.util.Map;
+
+public class Culculyator {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        Double[] values = readValues(scanner);
+        Double number1 = values[0];
+        Double number2 = values[1];
+        Character operation = readOperation(scanner);
+        Double result = null;
+
+        try {
+            result = compute(number1, number2, operation);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+
+        System.out.print("Результат: ");
+        System.out.println(number1 + " " + operation + " " + number2 + " = " + result);
+        System.out.println();
+    }
+
+    private static Double[] readValues(Scanner scanner) {
+        System.out.print("Введите два числа: ");
+        String input = scanner.nextLine();
+        String[] strings = input.split("\\s+");
+
+        Double[] values = new Double[2];
+
+        if (isArabicDouble(strings[0]) && isArabicDouble(strings[1])) {
+            System.out.println("Введенные числа являются арабскими.");
+            values[0] = Double.valueOf(strings[0]);
+            values[1] = Double.valueOf(strings[1]);
+        } else if (isRomanDouble(strings[0]) && isRomanDouble(strings[1])) {
+            System.out.println("Введенные числа являются римскими.");
+            values[0] = (double) RomanToArabicConverter.convert(strings[0]);
+            values[1] = (double) RomanToArabicConverter.convert(strings[1]);
+        } else {
+            throw new IllegalArgumentException("Неверный ввод. Ожидались два числа одного типа (арабские или римские).");
+        }
+
+        return values;
+    }
+
+    private static Character readOperation(Scanner scanner) {
+        System.out.print("Введите операцию (+, -, *, /): ");
+        String operation = scanner.next();
+        if (operation.length() != 1 || "+-*/".indexOf(operation.charAt(0)) == -1) {
+            throw new IllegalArgumentException("Неверный оператор. Ожидались +, -, *, /.");
+        }
+        return operation.charAt(0);
+    }
+
+    public static boolean isArabicDouble(String input) {
+        String regex = "^[\\d]*\\.?[\\d]*$"; // Проверка на арабское число
+        return input.matches(regex);
+    }
+
+    public static boolean isRomanDouble(String input) {
+        String regex = "^M{0,3}(CM|CD|D?C{0,3})(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})$";
+        return input.matches(regex);
+    }
+
+    public static class RomanToArabicConverter {
+        private static final Map<Character, Integer> romanMap = new HashMap<>();
+
+        static {
+            romanMap.put('I', 1);
+            romanMap.put('V', 5);
+            romanMap.put('X', 10);
+            romanMap.put('L', 50);
+            romanMap.put('C', 100);
+            romanMap.put('D', 500);
+            romanMap.put('M', 1000);
+        }
+
+        public static int convert(String roman) {
+            int arabic = 0;
+            int prevValue = 0;
+
+            for (int i = roman.length() - 1; i >= 0; i--) {
+                char currentChar = roman.charAt(i);
+                int currentValue = romanMap.get(currentChar);
+
+                if (currentValue < prevValue) {
+                    arabic -= currentValue;
+                } else {
+                    arabic += currentValue;
+                }
+                prevValue = currentValue;
+            }
+            return arabic;
+        }
+    }
+
+    private static Double compute(Double number1, Double number2, Character operator) {
+        switch (operator) {
+            case '+':
+                return number1 + number2;
+            case '-':
+                return number1 - number2;
+            case '*':
+                return number1 * number2;
+            case '/':
+                if (number2.equals(0.0)) {
+                    throw new ArithmeticException("Деление на ноль");
+                }
+                return number1 / number2;
+            default:
+                throw new IllegalArgumentException("Неверный оператор.");
+        }
+    }
+}
